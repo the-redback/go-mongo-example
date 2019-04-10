@@ -19,6 +19,11 @@ type Trainer struct {
 	City string
 }
 
+type Table struct {
+	FirstName string
+	LastName  string
+}
+
 func main() {
 	// Set client options
 	fmt.Println("Client Options...")
@@ -42,7 +47,7 @@ func main() {
 
 	// List database ============================
 	fmt.Println("List database names....")
-	listDB, err := client.ListDatabaseNames(context.TODO(), bsonx.Doc{}, )
+	listDB, err := client.ListDatabaseNames(context.TODO(), bsonx.Doc{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,6 +61,28 @@ func main() {
 		log.Fatal(err)
 	}
 	id := res.InsertedID
+	fmt.Println("id:", id, "response:", res)
+
+	//Insert using struct ===============================
+	ash := Trainer{"Ash", 10, "Pallet Town"}
+	fmt.Println("Insert using struct....")
+	collection = client.Database("test123").Collection("testcoll")
+	res, err = collection.InsertOne(context.TODO(), ash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	id = res.InsertedID
+	fmt.Println("id:", id, "response:", res)
+
+	//Insert using struct ===============================
+	person := Table{"kubernetes","database"}
+	fmt.Println("Insert using struct....")
+	collection = client.Database("test123").Collection("testcoll")
+	res, err = collection.InsertOne(context.TODO(), person)
+	if err != nil {
+		log.Fatal(err)
+	}
+	id = res.InsertedID
 	fmt.Println("id:", id, "response:", res)
 
 	//Query with cursor ===================================
@@ -145,14 +172,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(">>",dec)
+	fmt.Println(">>", dec)
 
-	val,ok := dec["partitioned"]
+	val, ok := dec["partitioned"]
 	if !ok {
 		log.Fatal(err)
 	}
-	fmt.Println(">>",val)
-
+	fmt.Println(">>", val)
 
 	// run command on db: enable sharding "test3" =======================================
 	fmt.Println("run command.....: enable sharding test3")
@@ -174,7 +200,7 @@ func main() {
 	db = client.Database("admin")
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	rsl = db.RunCommand(ctx, bson.D{{"shardCollection", "test3.testcoll"},{"key",bson.M{"myfield": 1}}})
+	rsl = db.RunCommand(ctx, bson.D{{"shardCollection", "test3.testcoll"}, {"key", bson.M{"myfield": 1}}})
 	if rsl.Err() != nil {
 		log.Fatal(rsl.Err())
 	}
@@ -183,7 +209,6 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(">> ", raw)
-
 
 	//Query with cursor:: All databases state ===================================
 	fmt.Println("Query config db...: All databases state ")

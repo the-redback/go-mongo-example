@@ -123,26 +123,6 @@ func main() {
 	//}
 	//fmt.Println(">> ", raw)
 
-	//Query with cursor ===================================
-	fmt.Println("Query config db...")
-	//ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
-	collection = client.Database("config").Collection("databases")
-	cur, err = collection.Find(context.TODO(), bson.D{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	for cur.Next(context.TODO()) {
-		var result bson.M
-		err := cur.Decode(&result)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("result:", result)
-	}
-	if err := cur.Err(); err != nil {
-		log.Fatal(err)
-	}
-
 	//Query with cursor: 'is test' db is partitioned ===================================
 	fmt.Println("Query config db...")
 	//ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
@@ -173,6 +153,58 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(">>",val)
+
+
+	// run command on db: enable sharding "test3" =======================================
+	fmt.Println("run command.....: enable sharding test3")
+	db = client.Database("admin")
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rsl = db.RunCommand(ctx, bson.D{{"enableSharding", "test3"}})
+	if rsl.Err() != nil {
+		log.Fatal(rsl.Err())
+	}
+	raw, err = rsl.DecodeBytes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(">> ", raw)
+
+	// Now shardCollection
+	fmt.Println("run command.....: shardCollection")
+	db = client.Database("admin")
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rsl = db.RunCommand(ctx, bson.D{{"shardCollection", "test3.testcoll"},{"key",bson.M{"myfield": 1}}})
+	if rsl.Err() != nil {
+		log.Fatal(rsl.Err())
+	}
+	raw, err = rsl.DecodeBytes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(">> ", raw)
+
+
+	//Query with cursor:: All databases state ===================================
+	fmt.Println("Query config db...: All databases state ")
+	//ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
+	collection = client.Database("config").Collection("databases")
+	cur, err = collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	for cur.Next(context.TODO()) {
+		var result bson.M
+		err := cur.Decode(&result)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("result:", result)
+	}
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
 
 	return
 }
